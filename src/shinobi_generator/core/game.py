@@ -2844,6 +2844,17 @@ def wrap_text(text, font, max_width):
     words = text.split(" ")
     lines, cur = [], ""
     for w in words:
+        # Dlouhé názvy jutsu nebo schopností mohou být širší než celý panel.
+        # Rozdělíme je po znacích, aby nikdy nepřetekly přes jeho okraj.
+        while font.size(w)[0] > max_width and len(w) > 1:
+            split_at = len(w) - 1
+            while split_at > 1 and font.size(w[:split_at] + "-")[0] > max_width:
+                split_at -= 1
+            if cur:
+                lines.append(cur)
+                cur = ""
+            lines.append(w[:split_at] + "-")
+            w = w[split_at:]
         test = (cur + " " + w).strip()
         if font.size(test)[0] <= max_width:
             cur = test
@@ -7060,10 +7071,15 @@ class Game:
         header_h = 70
         bottom_pad = 20
         if died:
-            head = font_h2.render(f"Postava zemřela v {c['vek']} letech (celkem odžila {c['roky_ubehle']} rok(y/ů)).", True, RED)
+            head_text = f"Postava zemřela v {c['vek']} letech (celkem odžila {c['roky_ubehle']} rok(y/ů))."
+            head_color = RED
         else:
-            head = font_h2.render(f"Postava má nyní {c['vek']} let  (celkem uplynulo {c['roky_ubehle']} rok(y/ů))", True, GOLD)
-        screen.blit(head, (panel.x + 25, panel.y + 20))
+            head_text = f"Postava má nyní {c['vek']} let  (celkem uplynulo {c['roky_ubehle']} rok(y/ů))"
+            head_color = GOLD
+        head_font, head_text = fit_font(head_text, panel.width - 50,
+                                        [font_h2, font_small, font_tiny])
+        head = head_font.render(head_text, True, head_color)
+        screen.blit(head, head.get_rect(center=(panel.centerx, panel.y + 34)))
 
         # Vyber font/řádkování tak, aby se VŠECHNY eventy vešly do boxu,
         # a navíc ořízni kreslení na panel jako pojistku pro extrémní případy.
@@ -7077,7 +7093,10 @@ class Game:
         screen.set_clip(clip_rect)
 
         y = panel.y + header_h
+        max_y = panel.bottom - 6
         for color, line, font in rendered:
+            if y + line_h > max_y:
+                break
             surf = font.render(line, True, color)
             screen.blit(surf, (panel.x + 25, y))
             y += line_h
