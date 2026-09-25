@@ -649,7 +649,7 @@ OPPONENT_FIRST_NAMES = [
 ]
 
 OPPONENT_TITLES = [
-    "z konkurenční Akademie", "z rivalského týmu", "toulavý žoldnéřský šinobi",
+    "z konkurenční Akademie", "ze soupeřícího týmu", "toulavý žoldnéřský šinobi",
     "z pohraniční hlídky", "vycvičený tajemným samotářem", "bez klanu, ale ambiciózní",
     "z jiné vesnice na zkušené", "s pověstí rváče z krčem", "z pátracího oddílu",
     "co si to na tebe brousí zuby už měsíce", "neznámého původu",
@@ -662,7 +662,7 @@ LORE_FIGHT_INTRO = [
     "Mise tě zavede za podezřelým šinobim - a skončí to soubojem.",
     "Během cesty tě přepadne někdo, kdo tě zjevně podcenil.",
     "Na turnaji mladých šinobi si tě soupeř vybere jako svého protivníka.",
-    "Starý rival, kterého jsi kdysi znal, se znovu postaví do tvé cesty.",
+    "Starý soupeř, kterého jsi kdysi znal, se znovu postaví do tvé cesty.",
     "V hospodě u hranic vesnice vypukne rvačka, která přeroste v pořádný souboj.",
     "Soupeř tě vyzve přímo před zraky tvého senseie - odmítnutí by byla ostuda.",
     "Na hlídce narazíš na vetřelce, který se rozhodně nechce jen tak vzdát.",
@@ -2454,17 +2454,6 @@ RANDOM_INTERACTIONS = [
         "bonus_amount": (6, 10),
     },
     {
-        "name": "Rival Encounter",
-        "chance": 0.22,
-        "lore": [
-            "Setkal ses s tvým rivalem v neformálním souboji. Ačkoliv jste se zbyt se neporazili, učeníse z jeho technik.",
-            "Tvůj rival tě vyzval. Souboj sice skončil bez vítěze, ale naučil ses spoustu nových věcí.",
-            "Věděl jsi, že tvůj rival se zlepšil - a motivovalo tě to. Trénoval jsi ještě tvrdši, abys mu nestál níže.",
-        ],
-        "bonus_type": "stats",
-        "bonus_amount": (5, 11),
-    },
-    {
         "name": "Wild Nature Training",
         "chance": 0.24,
         "lore": [
@@ -2928,7 +2917,6 @@ class Game:
             "trained_count": 0,
             "ryo_vydelano": 0,          # kolik ryo tahle postava za svůj život VYDĚLALA (viz add_ryo)
             "achievementy_ziskane": [], # id achievementů odemčených BĚHEM života téhle postavy (viz unlock_achievement)
-            "rival": None,              # pojmenovaný rival/nepřítel téhle postavy (viz ensure_rival/fight_rival)
         }
         self.stats_floor_used = None
         self.last_timeskip_events = []
@@ -2987,8 +2975,8 @@ class Game:
         self.pending_export = False
         self._card_export_rect = None
 
-        # --- obecný informační "toast" (zelený) - export karty, výsledek
-        # souboje s rivalem apod. Vykresluje se stejně jako achievement_toast. ---
+        # --- obecný informační "toast" (zelený) - export karty a výsledky
+        # herních akcí. Vykresluje se stejně jako achievement_toast. ---
         self.info_toast = None
         self.info_toast_time = 0
 
@@ -3176,8 +3164,6 @@ class Game:
             # každém vstupu, ať jsou vždy aktuální.
             data = load_json_list(LEGENDS_ARCHIVE_FILE)
             self._runstats_cache = self.compute_runstats(data)
-        if name == "rival":
-            self.ensure_rival()
         self.screen_name = name
 
     # ---------------- ACHIEVEMENTY ----------------
@@ -3401,81 +3387,6 @@ class Game:
     def cancel_back_confirm(self):
         self.back_confirm = None
 
-    # ---------------- RIVAL (souboj s konkrétním nepřítelem) ----------------
-    def ensure_rival(self):
-        """Zajistí, že postava má přiděleného pojmenovaného rivala - pokud
-        ještě žádného nemá, vygeneruje ho hned teď (jméno, vesnice odlišná
-        od té hráčovy, výchozí síla odvozená od aktuální 'power score' a
-        statů postavy). Rival zůstává stejný po celý zbytek života postavy,
-        jen mu s časem mírně roste síla (viz fight_rival), aby souboje
-        zůstaly zajímavé i o pár let později."""
-        if self.char.get("rival"):
-            return
-        own_village = self.char.get("vesnice")
-        choices = [v for v in VILLAGES if v != own_village and "Nukenin" not in v]
-        village = random.choice(choices) if choices else random.choice(VILLAGES)
-        name = f"{random.choice(OPPONENT_FIRST_NAMES)}, {random.choice(OPPONENT_TITLES)}"
-        if self.char.get("stats"):
-            base_power = sum(self.char["stats"].values())
-        else:
-            base_power = 200 + self.compute_power_score() * 15
-        # Rival startuje zhruba na stejné úrovni jako postava - trochu
-        # náhody, ať to není pokaždé úplná remíza.
-        power = max(80, int(base_power * random.uniform(0.85, 1.15)))
-        self.char["rival"] = {
-            "name": name,
-            "vesnice": village.split(" (")[0],
-            "power": power,
-            "wins": 0,     # kolikrát postava rivala porazila
-            "losses": 0,   # kolikrát rival porazil postavu
-            "last_result": None,
-            "log": [],
-        }
-
-    def fight_rival(self):
-        """Odehraje souboj JEN proti rivalovi (nikoliv náhodnému soupeři
-        roku) - na rozdíl od run_yearly_fight je tenhle souboj nikdy
-        smrtelný, dá se opakovat kdykoliv a slouží hlavně jako srovnávací
-        'rivalský' příběh vedle běžné roční progrese. Výhra dá menší
-        odměnu na staty, prohra jen posune rivala mírně dopředu (rival
-        roste, aby souboj časem zase dával smysl)."""
-        self.ensure_rival()
-        rival = self.char["rival"]
-        c = self.char
-        if c.get("stats"):
-            my_total = sum(c["stats"].values())
-        else:
-            my_total = 200 + self.compute_power_score() * 15
-        opp_total = rival["power"] + random.randint(-40, 40)
-        diff = my_total - opp_total
-        win_chance = 0.5 + diff / 400.0
-        win_chance = max(0.15, min(0.85, win_chance))
-        won = random.random() < win_chance
-
-        if won:
-            rival["wins"] += 1
-            rival["last_result"] = "vyhrál/a jsi"
-            line = f"Porazil/a jsi rivala {rival['name']}! {random.choice(LORE_FIGHT_WIN_EVEN)}"
-            events = []
-            self.award_major_stat_boost(events, f"Výhra nad rivalem {rival['name']}", 8, 18)
-            if events:
-                line += " " + events[0]
-            SOUND.fight_win()
-            # rival se z porážky poučí a mírně posílí, ať zůstane výzvou
-            rival["power"] = int(rival["power"] * random.uniform(1.02, 1.08))
-        else:
-            rival["losses"] += 1
-            rival["last_result"] = "prohrál/a jsi"
-            line = f"Rival {rival['name']} tě porazil. {random.choice(LORE_FIGHT_LOSE)} (souboj s rivalem není smrtelný.)"
-            SOUND.fight_lose()
-            rival["power"] = int(rival["power"] * random.uniform(1.05, 1.12))
-
-        rival["log"] = ([line] + rival.get("log", []))[:5]
-        c["log"] = c.get("log", []) + [f"[Rival] {line}"]
-        self.info_toast = line
-        self.info_toast_time = pygame.time.get_ticks()
-        self.spawn_burst(GOLD if won else RED)
-
     # ---------------- EXPORT KARTY POSTAVY (obrázek) ----------------
     def request_card_export(self):
         """Zavoláno tlačítkem 'EXPORTOVAT KARTU' - skutečné vyfocení
@@ -3668,19 +3579,6 @@ class Game:
             lines.append(f"Finální souboj s Jūbi (pokud k němu dojde): {JUBI_HERO_CHANCE * 100:.0f} % hrdinský konec, "
                           f"{JUBI_RAMPAGE_CHANCE * 100:.0f} % nejhorší konec, "
                           f"{(1 - JUBI_HERO_CHANCE - JUBI_RAMPAGE_CHANCE) * 100:.0f} % zkrocení Jūbi.")
-
-        if key == "rival":
-            self.ensure_rival()
-            rival = self.char["rival"]
-            if self.char.get("stats"):
-                my_total = sum(self.char["stats"].values())
-            else:
-                my_total = 200 + self.compute_power_score() * 15
-            win_chance = max(0.15, min(0.85, 0.5 + (my_total - rival["power"]) / 400.0))
-            lines.append(f"Tvoje aktuální odhadovaná šance na výhru nad rivalem {rival['name']}: {win_chance * 100:.1f} %.")
-            lines.append("(Přesný výsledek se ještě mírně náhodně kolísá o ± síle soupeře, ale tohle je aktuální střed.)")
-            lines.append("Souboj s rivalem NIKDY nezabije - jen ovlivní jeho/jej sílu a tvoje staty při výhře.")
-            lines.append("Rival po každém souboji (výhře i prohře) mírně zesílí, ať zůstává výzvou i později.")
 
         return lines
 
@@ -5574,9 +5472,7 @@ class Game:
         elif self.screen_name == "timeskip_result":
             _, btn_y, _, _ = generic_layout(panel_height=480, button_h=55, gap=20)
             if self.char_is_active():
-                # 3 tlačítka vedle sebe: další rok / trénink statů / zpět do
-                # menu (trénink statů se sem přesunul z karty postavy - viz
-                # "summary", kde je teď místo něj ULOŽIT DO TXT).
+                # 3 tlačítka vedle sebe: další rok / trénink statů / karta.
                 n_btn, gap, btn_w = 3, 20, 300
                 row_w = n_btn * btn_w + (n_btn - 1) * gap
                 bx = WIDTH // 2 - row_w // 2
@@ -5647,15 +5543,6 @@ class Game:
                 self.buttons.append(Button((WIDTH // 2 - 260, back_y - 62, 520, 42),
                                             "ZRUŠIT AKTIVNÍ VÝZVU (postava zůstane)",
                                             self.cancel_challenge, color=RED, text_color=WHITE, font=font_small))
-            self.build_back_button(y=back_y)
-        elif self.screen_name == "rival":
-            _, btn_y, back_y, _ = generic_layout(panel_height=340, button_h=55, gap=24)
-            self.buttons.append(Button((WIDTH // 2 - 200, btn_y, 400, 55), "VYZVAT RIVALA NA SOUBOJ",
-                                        self.fight_rival, color=RED, text_color=WHITE))
-            self.buttons.append(Button((WIDTH - 64, 108, 40, 40), "?",
-                                        lambda: self.toggle_prob_info("rival"),
-                                        color=(BLUE if self.prob_info_open == "rival" else BG_PANEL3),
-                                        text_color=WHITE, font=font_med))
             self.build_back_button(y=back_y)
         elif self.screen_name == "runstats":
             _, _, back_y, _ = generic_layout(panel_height=600, button_h=45, gap=20)
@@ -5975,12 +5862,6 @@ class Game:
         self.buttons.append(Button((misc_x, misc_y, misc_w, misc_h), challenge_label,
                                     lambda: self.go("challenges"), color=challenge_color, text_color=WHITE, font=font_small))
         misc_y += misc_h + misc_gap
-        rival = self.char.get("rival")
-        rival_label = f"Rival ({rival['wins']}-{rival['losses']})" if rival else "Rival"
-        self.buttons.append(Button((misc_x, misc_y, misc_w, misc_h), rival_label,
-                                    lambda: self.go("rival"), color=RED if rival else BG_PANEL2,
-                                    text_color=WHITE, font=font_small))
-        misc_y += misc_h + misc_gap
         self.buttons.append(Button((misc_x, misc_y, misc_w, misc_h), "Statistiky (běhy)",
                                     lambda: self.go("runstats"), color=BG_PANEL2, text_color=WHITE, font=font_small))
 
@@ -6036,8 +5917,6 @@ class Game:
             self.draw_archive_detail()
         elif self.screen_name == "challenges":
             self.draw_challenges()
-        elif self.screen_name == "rival":
-            self.draw_rival()
         elif self.screen_name == "runstats":
             self.draw_runstats()
 
@@ -6089,8 +5968,8 @@ class Game:
             draw_panel(screen, box, BG_PANEL3, RED, border_radius=12, border_width=2, glow=False)
             screen.blit(surf, surf.get_rect(center=box.center))
         elif self.info_toast and pygame.time.get_ticks() - self.info_toast_time < 4000:
-            # Obecný informační toast (export karty, výsledek souboje
-            # s rivalem apod.) - stejný vizuál jako achievement toast,
+            # Obecný informační toast (export karty a výsledek souboje)
+            # - stejný vizuál jako achievement toast,
             # jen modrý.
             max_w = WIDTH - 100
             font, txt = fit_font(self.info_toast, max_w, [font_med, font_small, font_tiny])
@@ -7067,48 +6946,6 @@ class Game:
             if ch is not CHALLENGES[-1]:
                 pygame.draw.line(screen, DARKGRAY, (panel.x + 15, y + row_h - 6), (panel.right - 15, y + row_h - 6), 1)
             y += row_h
-
-    def draw_rival(self):
-        """Obrazovka souboje s konkrétním pojmenovaným rivalem - na rozdíl
-        od běžného 'souboje roku' je tenhle vždy proti stejné osobě (viz
-        ensure_rival/fight_rival), nikdy smrtelný a dá se opakovat
-        libovolně, nezávisle na time skipech."""
-        self.draw_top_bar("SOUBOJ S RIVALEM", RED)
-        self.ensure_rival()
-        rival = self.char["rival"]
-
-        panel_y, _, _, panel_h = generic_layout(panel_height=340, button_h=55, gap=24)
-        panel_w = min(760, WIDTH - 80)
-        panel = pygame.Rect((WIDTH - panel_w) // 2, panel_y, panel_w, panel_h)
-        draw_panel(screen, panel, BG_PANEL, RED, border_radius=16, border_width=2, glow=True, shine=True)
-        draw_corner_ornaments(screen, panel, RED)
-
-        y = panel.y + 24
-        name_surf = font_h1.render(rival["name"], True, GOLD)
-        screen.blit(name_surf, name_surf.get_rect(center=(panel.centerx, y)))
-        y += 46
-        vil_surf = font_med.render(f"Vesnice: {rival['vesnice']}", True, WHITE)
-        screen.blit(vil_surf, vil_surf.get_rect(center=(panel.centerx, y)))
-        y += 34
-        record_surf = font_med.render(f"Skóre proti tobě: {rival['wins']} výher - {rival['losses']} proher",
-                                       True, GREEN if rival["wins"] >= rival["losses"] else RED)
-        screen.blit(record_surf, record_surf.get_rect(center=(panel.centerx, y)))
-        y += 40
-
-        if rival.get("last_result"):
-            last_surf = font_small.render(f"Poslední souboj: {rival['last_result']}", True, GOLD)
-            screen.blit(last_surf, last_surf.get_rect(center=(panel.centerx, y)))
-            y += 30
-
-        if rival.get("log"):
-            hist_lbl = font_small.render("Historie soubojů:", True, GRAY)
-            screen.blit(hist_lbl, (panel.x + 24, y))
-            y += 24
-            for line in rival["log"]:
-                for wrapped in wrap_text(line, font_tiny, panel.width - 48):
-                    surf = font_tiny.render(wrapped, True, WHITE)
-                    screen.blit(surf, (panel.x + 24, y))
-                    y += 18
 
     def draw_runstats(self):
         """Souhrnné statistiky napříč VŠEMI odehranými postavami/běhy -

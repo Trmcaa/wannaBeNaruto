@@ -2099,5 +2099,100 @@
       "akatsuki_porazena"
     ],
     "reason": "konec_pribehu"
+  },
+  {
+    "cas": "2026-09-25 14:08:18",
+    "jmeno": "Rita",
+    "vek": 31,
+    "pohlavi": "Žena",
+    "vesnice": "Konohagakure (Vesnice Listu)",
+    "klan": "Kurama (jinchūriki linie)",
+    "mentor": "Yamato",
+    "dojutsu": "Žádné",
+    "abilities": [],
+    "natures": [
+      "Vítr (Fūton)",
+      "Blesk (Raiton)"
+    ],
+    "kekkei_genkai": [
+      "Shikotsumyaku (kostěná manipulace)",
+      "Gaston (Plynný styl)",
+      "Mizuki (vodní příbuzní)"
+    ],
+    "kekkei_tota": [
+      "Tatsukaze (Dračí vítr)"
+    ],
+    "jinchuriki": "Kurama (Kyūbi - Devítiocasá liška)",
+    "rank": "Genin",
+    "titul": "Jméno známé po celém světě šinobiů",
+    "staty_celkem": 174,
+    "stats": {
+      "Ninjutsu": 25,
+      "Taijutsu": 23,
+      "Genjutsu": 15,
+      "Inteligence": 16,
+      "Síla": 21,
+      "Rychlost": 16,
+      "Výdrž": 28,
+      "Chakra kapacita": 30
+    },
+    "power_tier": "D-rank potenciál",
+    "roky_ubehle": 2,
+    "alive": false,
+    "ending": null,
+    "death_reason": "Extrakce Bijuu, které jsi se tak dlouho bál, se nakonec stala tvým koncem.",
+    "challenge_id": null,
+    "challenge_completed": false,
+    "ryo_pri_ulozeni": 64608,
+    "ryo_vydelano": 17,
+    "achievementy_ziskane": [],
+    "reason": "konec_pribehu"
+  },
+  {
+    "cas": "2026-09-25 14:11:45",
+    "jmeno": "Kyla",
+    "vek": 41,
+    "pohlavi": "Žena",
+    "vesnice": "Yugakure (Vesnice Lázní)",
+    "klan": "Kurama (jinchūriki linie)",
+    "mentor": "Minato Namikaze - Čtvrtý Hokage",
+    "dojutsu": "Věčný Mangekyō Sharingan",
+    "abilities": [
+      "Obituv Kamui (teleportace/fúze prostoru)"
+    ],
+    "natures": [
+      "Zem (Doton)"
+    ],
+    "kekkei_genkai": [
+      "Nara Klan (stínová manipulace)",
+      "Kotsu Kessei (regenerační krev)",
+      "Inuzuka (zvířecí instinkty)"
+    ],
+    "kekkei_tota": [],
+    "jinchuriki": "Son Gokū (Yonbi - Čtyřocasá opice)",
+    "rank": "Jōnin",
+    "titul": "Living legend - žijící legenda",
+    "staty_celkem": 499,
+    "stats": {
+      "Ninjutsu": 71,
+      "Taijutsu": 63,
+      "Genjutsu": 59,
+      "Inteligence": 64,
+      "Síla": 68,
+      "Rychlost": 61,
+      "Výdrž": 61,
+      "Chakra kapacita": 52
+    },
+    "power_tier": "B-rank potenciál",
+    "roky_ubehle": 4,
+    "alive": false,
+    "ending": null,
+    "death_reason": "Zůstal jsi ležet na místě souboje - Akatsuki si pro tvého Bijuu přišla naposledy.",
+    "challenge_id": null,
+    "challenge_completed": false,
+    "ryo_pri_ulozeni": 61218,
+    "ryo_vydelano": 330,
+    "achievementy_ziskane": [],
+    "reason": "konec_pribehu"
   }
 ]
