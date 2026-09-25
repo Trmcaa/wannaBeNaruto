@@ -2249,5 +2249,49 @@
     "ryo_vydelano": 7216,
     "achievementy_ziskane": [],
     "reason": "konec_pribehu"
+  },
+  {
+    "cas": "2026-09-25 14:33:04",
+    "jmeno": "Sakura",
+    "vek": 41,
+    "pohlavi": "Žena",
+    "vesnice": "Konohagakure (Vesnice Listu)",
+    "klan": "Bez klanu - obyčejná rodina",
+    "mentor": "Hashirama Senju - První Hokage",
+    "dojutsu": "Žádné",
+    "abilities": [],
+    "natures": [
+      "Blesk (Raiton)",
+      "Voda (Suiton)"
+    ],
+    "kekkei_genkai": [
+      "Akimichi (růst těla)"
+    ],
+    "kekkei_tota": [],
+    "jinchuriki": "Žádný - obyčejný šinobi bez Bijuu",
+    "rank": "Nukenin (S-rank psanec)",
+    "titul": "Postrach na bojišti",
+    "staty_celkem": 583,
+    "stats": {
+      "Ninjutsu": 67,
+      "Taijutsu": 72,
+      "Genjutsu": 77,
+      "Inteligence": 77,
+      "Síla": 62,
+      "Rychlost": 87,
+      "Výdrž": 78,
+      "Chakra kapacita": 63
+    },
+    "power_tier": "A-rank potenciál",
+    "roky_ubehle": 1,
+    "alive": false,
+    "ending": null,
+    "death_reason": "Snažil ses doplazit zpátky k vlastním liniím. Nedošel jsi. Tvé jméno teď přibude na pomník padlých.",
+    "challenge_id": null,
+    "challenge_completed": false,
+    "ryo_pri_ulozeni": 69493,
+    "ryo_vydelano": 0,
+    "achievementy_ziskane": [],
+    "reason": "konec_pribehu"
   }
 ]

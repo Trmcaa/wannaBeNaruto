@@ -4540,6 +4540,43 @@ class Game:
             moves = list(MOVE_POOL_BASIC)
         return moves
 
+    def attack_czech_name(self, attack):
+        """Vrátí krátký český název k libovolné technice v bojovém logu."""
+        lowered = attack.lower()
+        aliases = (
+            (("rinnegan", "shinra tensei", "chibaku tensei", "bansho ten'in", "preta path", "animal path", "asura path"), "technika Rinneganu"),
+            (("sharingan", "amaterasu", "tsukuyomi", "kamui", "susanoo", "genjutsu"), "technika dōjutsu"),
+            (("raiton", "chidori", "kirin", "blesk"), "bleskový útok"),
+            (("suiton", "vodní", "voda"), "vodní útok"),
+            (("katon", "ohniv", "oheň", "ohen"), "ohnivý útok"),
+            (("fūton", "futon", "větr", "vítr", "rasenshuriken"), "větrný Rasengan"),
+            (("doton", "zemní", "země", "zem"), "zemní útok"),
+            (("mokuton", "dřeva", "dřevěn"), "dřevěný styl"),
+            (("hyōton", "hyoton", "ledu", "ledov"), "ledový styl"),
+            (("yōton", "yoton", "lávy", "lávov", "magmat"), "lávový styl"),
+            (("shakuton", "spálené země"), "styl spalujícího žáru"),
+            (("futton", "vroucí páry", "pára"), "parní styl"),
+            (("ranton", "bouře", "bouřkov"), "bouřkový styl"),
+            (("bakuton", "výbuch", "výbušn"), "výbušný styl"),
+            (("jiton", "magnet", "magnetick"), "magnetický styl"),
+            (("tetsuton", "kinton", "kurogane", "želez"), "železný styl"),
+            (("shikotsumyaku", "kostěn", "kostí"), "kostěná technika"),
+            (("aburame", "hmyz"), "hmyzí technika"),
+            (("inuzuka", "zvířec", "drápy"), "zvířecí technika"),
+            (("nara", "stín"), "stínová technika"),
+            (("yamanaka", "mysli", "psychick"), "technika přenosu mysli"),
+            (("akimichi", "gigantiz", "obřím tělem"), "technika růstu těla"),
+            (("jinchūriki", "bijū", "bijuu", "chakra devítiocasé"), "technika Bijū"),
+        )
+        for terms, name in aliases:
+            if any(term in lowered for term in terms):
+                return name
+        return "taijutsu útok"
+
+    def format_attack(self, attack):
+        """Přidá český název techniky do bojového logu právě jednou."""
+        return f"{attack} ({self.attack_czech_name(attack)})"
+
     def generate_fight_exchanges(self, my_total, opp_total):
         """Vygeneruje pár výměn pojmenovaných technik PŘED finálním úderem:
         hráč použije náhodnou techniku ze svého poolu (get_player_move_pool),
@@ -4555,25 +4592,27 @@ class Game:
         for _ in range(rounds):
             # --- útok hráče ---
             move = random.choice(my_moves)
-            lines.append(f"Ty: {move}")
+            move_display = self.format_attack(move)
+            lines.append(f"Ty: {move_display}")
             dodge_chance = max(0.15, min(0.85, 0.5 - (power_ratio - 1.0) * 0.3 + random.uniform(-0.1, 0.1)))
             if random.random() < dodge_chance:
-                lines.append(f"   * Nepřítel se vyhnul tvé technice ({move}).")
+                lines.append(f"   * Nepřítel se vyhnul tvé technice ({move_display}).")
             elif random.random() < 0.35:
-                lines.append(f"   * Nepřítel se jen tak tak vyhnul tvé technice ({move}).")
+                lines.append(f"   * Nepřítel se jen tak tak vyhnul tvé technice ({move_display}).")
             else:
-                lines.append(f"   * Zásah! Nepřítel nestihl uhnout před {move}.")
+                lines.append(f"   * Zásah! Nepřítel nestihl uhnout před {move_display}.")
 
             # --- odpověď nepřítele ---
             enemy_move = random.choice(ENEMY_MOVE_POOL)
-            lines.append(f"Nepřítel: {enemy_move}")
+            enemy_display = self.format_attack(enemy_move)
+            lines.append(f"Nepřítel: {enemy_display}")
             enemy_dodge_chance = max(0.15, min(0.85, 0.5 + (power_ratio - 1.0) * 0.3 + random.uniform(-0.1, 0.1)))
             if random.random() < enemy_dodge_chance:
-                lines.append(f"   * Vyhnul(a) ses nepřítelově technice ({enemy_move}).")
+                lines.append(f"   * Vyhnul(a) ses nepřítelově technice ({enemy_display}).")
             elif random.random() < 0.35:
-                lines.append(f"   * Jen tak tak ses vyhnul(a) nepřítelově technice ({enemy_move}).")
+                lines.append(f"   * Jen tak tak ses vyhnul(a) nepřítelově technice ({enemy_display}).")
             else:
-                lines.append(f"   * Zásah! Nestihl(a) jsi uhnout před {enemy_move}.")
+                lines.append(f"   * Zásah! Nestihl(a) jsi uhnout před {enemy_display}.")
 
         return lines
 
@@ -4620,7 +4659,7 @@ class Game:
             techniques = self.get_available_fight_techniques()
             if techniques:
                 tech = random.choice(techniques)
-                events.append(f"Souboj jsi rozhodl {tech}.")
+                events.append(f"Souboj jsi rozhodl {self.format_attack(tech)}.")
         else:
             events.append(f"- ROZHODUJÍCÍ ÚDER - Prohra. {random.choice(LORE_FIGHT_LOSE)}")
             fight_bonus = 0.85
@@ -7032,51 +7071,94 @@ class Game:
         """Vrátí barvu pro event v ročním souboji podle použité techniky."""
         lowered = text.lower()
 
-        # Dōjutsu mají neutrální bílou, aby se nemíchala jejich barva
-        # s elementární chakrou v okolním textu.
+        # Vše spojené s Rinneganu má fialovou barvu.
+        rinnegan_terms = (
+            "rinnegan", "shinra tensei", "chibaku tensei", "bansho ten'in",
+            "preta path", "animal path", "asura path", "human path",
+            "naraka path", "gedo path", "šest cest rinneganu",
+        )
+        if any(term in lowered for term in rinnegan_terms):
+            return PURPLE
+
+        # Ostatní dōjutsu mají neutrální bílou.
         dojutsu_terms = (
             "sharingan", "byakugan", "rinnegan", "tenseigan", "jōgan", "jogan",
             "ketsuryūgan", "ketsuryugan", "amaterasu", "tsukuyomi", "kamui",
-            "susanoo", "shinra tensei", "chibaku tensei", "gentle fist",
+            "susanoo", "gentle fist",
         )
         if any(term in lowered for term in dojutsu_terms):
             return WHITE
 
-        # Základní nature a jejich jutsu.
+        # Základní nature podle barevného schématu z referenční tabulky:
+        # oheň červeně, voda modře, vítr zeleně, blesk žlutě a zem okrově.
         nature_colors = (
             (("blesk", "raiton", "chidori", "kirin"), GOLD),
             (("voda", "suiton", "vodní", "vodou"), BLUE),
             (("oheň", "ohen", "katon", "ohniv", "plamen"), RED),
-            (("vítr", "vitr", "fūton", "futon", "větru"), (180, 230, 255)),
-            (("zem", "doton", "zemní", "země"), (170, 125, 85)),
+            (("vítr", "vitr", "fūton", "futon", "větru", "rasenshuriken"), (55, 190, 105)),
+            (("zem", "doton", "zemní", "země"), (175, 125, 65)),
         )
         for terms, color in nature_colors:
             if any(term in lowered for term in terms):
                 return color
 
-        # Elementární kekkei genkai. Unikátní krevní linie používají
-        # fialovou, protože nemají jednu konkrétní elementární barvu.
+        # Kekkei genkai podle referenční tabulky. Vlastní styly, které v ní
+        # nejsou, dostávají samostatné barvy podle jejich motivu.
         kekkei_colors = (
             (("mokuton", "stylu dřeva", "dřevěn"), GREEN),
             (("hyōton", "hyoton", "stylu ledu", "ledové"), (120, 220, 255)),
-            (("yōton", "yoton", "stylu lávy", "lávov", "magmat"), (255, 85, 35)),
-            (("shakuton", "spálené země"), (255, 120, 35)),
-            (("futton", "stylu vroucí páry", "vroucí páry"), (225, 225, 225)),
-            (("ranton", "stylu bouře", "bouřkov"), (100, 220, 255)),
-            (("bakuton", "stylu výbuchu", "výbušn"), (255, 185, 45)),
-            (("jiton", "stylu magnetismu", "magnetick"), (235, 195, 80)),
-            (("sabaku", "písečn"), (220, 180, 95)),
-            (("kekkei genkai", "kekkei tota"), PURPLE),
+            (("yōton", "yoton", "stylu lávy", "lávov", "magmat"), (180, 45, 25)),
+            (("shakuton", "spálené země", "scorch"), (245, 75, 25)),
+            (("futton", "stylu vroucí páry", "vroucí páry", "boil"), (220, 45, 145)),
+            (("ranton", "stylu bouře", "bouřkov", "storm"), (45, 55, 115)),
+            (("bakuton", "stylu výbuchu", "výbušn", "explosion"), (255, 145, 20)),
+            (("jiton", "stylu magnetismu", "magnetick", "magnet"), (145, 55, 220)),
+            (("sabakuton", "sabaku", "písečn", "písku"), (215, 175, 90)),
+            (("iryōton", "iryoton", "léčiv", "léčeb"), (70, 205, 125)),
+            (("gomanton", "pětimoduální", "pět živl"), (235, 190, 55)),
+            (("kinton", "kovový", "kovov"), (120, 145, 165)),
+            (("gaston", "plynný", "plyn", "toxick"), (155, 210, 175)),
+            (("mōton", "moton", "temný", "temnot"), (85, 45, 125)),
+            (("tetsuton", "železný", "železo", "ocel"), (105, 125, 145)),
+            (("suiryōton", "suiryoton", "ledář", "mraziv"), (95, 205, 230)),
+            (("shikotsumyaku", "kostěn", "kostí"), (235, 235, 245)),
+            (("jikūkan", "prostoročas", "teleport"), (115, 90, 210)),
+            (("kotsu kessei", "regenerační krev", "regener"), (210, 55, 85)),
+            (("souzoshoku", "absorpce chakry", "absorpč"), (95, 170, 95)),
+            (("karakuri", "loutkář", "loutk"), (220, 145, 75)),
+            (("aburame", "hmyzí", "hmyz"), (125, 175, 55)),
+            (("inuzuka", "zvířec", "drápy"), (190, 115, 70)),
+            (("nara", "stín", "stínov"), (70, 70, 115)),
+            (("yamanaka", "mysli", "psychick"), (225, 105, 185)),
+            (("akimichi", "gigantiz", "růstu těla"), (235, 145, 65)),
+            (("rinha", "zvířecí transform"), (205, 105, 55)),
+            (("kurama", "chakra lišky", "lišky"), (235, 100, 35)),
+            (("mizuki", "vodní příbuz", "vodní tělo"), (70, 155, 210)),
+            (("hōzuki", "hozuki", "tekutá těla", "tekut"), (80, 195, 220)),
+            (("shinigami", "síla smrti", "smrt"), (115, 45, 95)),
+            (("tatsutake", "dračí síla", "dračí"), (210, 55, 40)),
+            (("ninken", "psaní zvířat", "ninps"), (150, 100, 190)),
+            (("kyūseisōsai", "kyuseisosai", "revitalizační"), (75, 190, 145)),
+            (("kekkei genkai", "kekkei tota"), (200, 100, 220)),
         )
         for terms, color in kekkei_colors:
             if any(term in lowered for term in terms):
                 return color
 
+        # Základní a nezatříděné útoky nejsou šedé, aby vizuálně nezanikly.
+        basic_attack_terms = (
+            "úder", "uder", "kop", "pěst", "pest", "shuriken", "kunai",
+            "taijutsu", "kombo", "protiúder", "protiuder", "technika",
+        )
+        if (lowered.startswith(("ty:", "nepřítel:", "   *"))
+                or any(term in lowered for term in basic_attack_terms)):
+            return WHITE
+
         if text.startswith("!"):
             return RED
         if text.startswith("*"):
             return GOLD
-        return GRAY
+        return WHITE
 
     def draw_timeskip_result(self):
         died = not self.char.get("alive", True)
