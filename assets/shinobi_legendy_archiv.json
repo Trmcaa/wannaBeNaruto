@@ -2194,5 +2194,60 @@
     "ryo_vydelano": 330,
     "achievementy_ziskane": [],
     "reason": "konec_pribehu"
+  },
+  {
+    "cas": "2026-09-25 14:23:50",
+    "jmeno": "Tragia",
+    "vek": 81,
+    "pohlavi": "Muž",
+    "vesnice": "Konohagakure (Vesnice Listu)",
+    "klan": "Sarutobi",
+    "mentor": "Might Guy",
+    "dojutsu": "Rinnegan/MS Sharingan",
+    "abilities": [
+      "Shisuiho Kotoamatsukami (nepostřehnutelné mentální genjutsu)",
+      "Šest Cest Rinneganu (ovládání Deva, Asura, Human, Animal, Preta i Naraka Cesty)"
+    ],
+    "natures": [
+      "Voda (Suiton)"
+    ],
+    "kekkei_genkai": [
+      "Souzoshoku (absorpce chakry buňkami)",
+      "Mizuki (vodní příbuzní)",
+      "Akimichi (růst těla)",
+      "Tatsutake (dračí síla)",
+      "Hōzuki (tekutá těla)",
+      "Kurama (chakra lišky)",
+      "Rinha (zvířecí transformace)",
+      "Aburame (kontrola hmyzu)",
+      "Shinigami no Chikara (síla smrti)",
+      "Shikotsumyaku (kostěná manipulace)"
+    ],
+    "kekkei_tota": [],
+    "jinchuriki": "Žádný - obyčejný šinobi bez Bijuu",
+    "rank": "Akatsuki",
+    "titul": "Bytost na úrovni boha šinobiů",
+    "staty_celkem": 800,
+    "stats": {
+      "Ninjutsu": 100,
+      "Taijutsu": 100,
+      "Genjutsu": 100,
+      "Inteligence": 100,
+      "Síla": 100,
+      "Rychlost": 100,
+      "Výdrž": 100,
+      "Chakra kapacita": 100
+    },
+    "power_tier": "S-rank potenciál",
+    "roky_ubehle": 39,
+    "alive": true,
+    "ending": "infinite_tsukuyomi",
+    "death_reason": null,
+    "challenge_id": null,
+    "challenge_completed": false,
+    "ryo_pri_ulozeni": 68578,
+    "ryo_vydelano": 7216,
+    "achievementy_ziskane": [],
+    "reason": "konec_pribehu"
   }
 ]

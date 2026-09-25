@@ -7018,12 +7018,7 @@ class Game:
             rendered = []
             total_h = 0
             for ev in self.last_timeskip_events:
-                if ev.startswith("!"):
-                    color = RED
-                elif ev.startswith("*"):
-                    color = GOLD
-                else:
-                    color = GRAY
+                color = self.timeskip_event_color(ev)
                 for line in wrap_text(ev, font, text_width):
                     rendered.append((color, line, font))
                     total_h += line_h
@@ -7032,6 +7027,56 @@ class Game:
             if total_h <= content_avail_h:
                 return rendered, line_h
         return last
+
+    def timeskip_event_color(self, text):
+        """Vrátí barvu pro event v ročním souboji podle použité techniky."""
+        lowered = text.lower()
+
+        # Dōjutsu mají neutrální bílou, aby se nemíchala jejich barva
+        # s elementární chakrou v okolním textu.
+        dojutsu_terms = (
+            "sharingan", "byakugan", "rinnegan", "tenseigan", "jōgan", "jogan",
+            "ketsuryūgan", "ketsuryugan", "amaterasu", "tsukuyomi", "kamui",
+            "susanoo", "shinra tensei", "chibaku tensei", "gentle fist",
+        )
+        if any(term in lowered for term in dojutsu_terms):
+            return WHITE
+
+        # Základní nature a jejich jutsu.
+        nature_colors = (
+            (("blesk", "raiton", "chidori", "kirin"), GOLD),
+            (("voda", "suiton", "vodní", "vodou"), BLUE),
+            (("oheň", "ohen", "katon", "ohniv", "plamen"), RED),
+            (("vítr", "vitr", "fūton", "futon", "větru"), (180, 230, 255)),
+            (("zem", "doton", "zemní", "země"), (170, 125, 85)),
+        )
+        for terms, color in nature_colors:
+            if any(term in lowered for term in terms):
+                return color
+
+        # Elementární kekkei genkai. Unikátní krevní linie používají
+        # fialovou, protože nemají jednu konkrétní elementární barvu.
+        kekkei_colors = (
+            (("mokuton", "stylu dřeva", "dřevěn"), GREEN),
+            (("hyōton", "hyoton", "stylu ledu", "ledové"), (120, 220, 255)),
+            (("yōton", "yoton", "stylu lávy", "lávov", "magmat"), (255, 85, 35)),
+            (("shakuton", "spálené země"), (255, 120, 35)),
+            (("futton", "stylu vroucí páry", "vroucí páry"), (225, 225, 225)),
+            (("ranton", "stylu bouře", "bouřkov"), (100, 220, 255)),
+            (("bakuton", "stylu výbuchu", "výbušn"), (255, 185, 45)),
+            (("jiton", "stylu magnetismu", "magnetick"), (235, 195, 80)),
+            (("sabaku", "písečn"), (220, 180, 95)),
+            (("kekkei genkai", "kekkei tota"), PURPLE),
+        )
+        for terms, color in kekkei_colors:
+            if any(term in lowered for term in terms):
+                return color
+
+        if text.startswith("!"):
+            return RED
+        if text.startswith("*"):
+            return GOLD
+        return GRAY
 
     def draw_timeskip_result(self):
         died = not self.char.get("alive", True)
